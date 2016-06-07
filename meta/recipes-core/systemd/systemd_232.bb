@@ -131,9 +131,9 @@ CACHED_CONFIGUREVARS += "ac_cv_path_SULOGIN=${base_sbindir}/sulogin"
 
 # Helper variables to clarify locations.  This mirrors the logic in systemd's
 # build system.
-rootprefix ?= "${base_prefix}"
+rootprefix ?= "${@bb.utils.contains('DISTRO_FEATURES', 'usrmerge', '${exec_prefix}', '${base_prefix}', d)}"
 rootlibdir ?= "${base_libdir}"
-rootlibexecdir = "${rootprefix}/lib"
+rootlibexecdir = "${@bb.utils.contains('DISTRO_FEATURES', 'usrmerge', '${rootlibdir}', '${rootprefix}/lib', d)}"
 
 CACHED_CONFIGUREVARS_class-target = "\
                          ac_cv_path_MOUNT_PATH=${base_bindir}/mount \
@@ -149,7 +149,7 @@ CACHED_CONFIGUREVARS_class-target = "\
 EXTRA_OECONF = " --with-rootprefix=${rootprefix} \
                  --with-rootlibdir=${rootlibdir} \
                  --with-roothomedir=${ROOT_HOME} \
-                 --enable-split-usr \
+                 ${@bb.utils.contains('DISTRO_FEATURES', 'usrmerge', '--disable-split-usr', '--enable-split-usr', d)} \
                  --without-python \
                  --with-sysvrcnd-path=${sysconfdir} \
                  --with-firmware-path=/lib/firmware \
