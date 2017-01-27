@@ -44,8 +44,8 @@ DEPENDS_GETTEXT = "gettext-native"
 target_base_prefix := "${base_prefix}"
 target_prefix := "${prefix}"
 target_exec_prefix := "${exec_prefix}"
-target_base_libdir = "${target_base_prefix}/${baselib}"
 target_libdir = "${target_exec_prefix}/${baselib}"
+target_base_libdir = "${@bb.utils.contains('DISTRO_FEATURES', 'usrmerge', '${target_libdir}', '${target_base_prefix}/${baselib}', d)}"
 target_includedir := "${includedir}"
 
 # Overrides for paths
