@@ -44,6 +44,8 @@ inherit chrpath
 # Need the package_qa_handle_error() in insane.bbclass
 inherit insane
 
+inherit ${@bb.utils.contains('DISTRO_FEATURES', 'usrmerge', 'usrmerge', '', d)}
+
 PKGD    = "${WORKDIR}/package"
 PKGDEST = "${WORKDIR}/packages-split"
 
