@@ -205,6 +205,7 @@ LINGUAS_INSTALL ?= "${@" ".join(map(lambda s: "locale-base-%s" % s, d.getVar('IM
 PSEUDO_PASSWD = "${IMAGE_ROOTFS}:${STAGING_DIR_NATIVE}"
 
 inherit rootfs-postcommands
+inherit ${@bb.utils.contains('DISTRO_FEATURES', 'usrmerge', 'usrmerge', '', d)}
 
 PACKAGE_EXCLUDE ??= ""
 PACKAGE_EXCLUDE[type] = "list"

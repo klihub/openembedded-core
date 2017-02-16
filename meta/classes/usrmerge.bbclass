@@ -1,3 +1,9 @@
+#
+# If usrmerge is inherited by package.bbclass we hook ourselves into
+# populate_packages and either try to fix up packages that don't obey
+# usrmerge, or bail out with an error if USRMERGE_FIXUP is set to empty.
+#
+
 # By default give a warning and try to fix up packages.
 USRMERGE_FIXUP ?= "fixup"
 
@@ -56,3 +62,53 @@ python populate_packages_append () {
                 usrmerge_relocate_files(pkgd, l)
                 usrmerge_relocate_meta(d, pkg)
 }
+
+
+#
+# If usrmerge is inherited by image.bbclass, we hook ourselves into
+# rootfs preparation and make sure the affected part of the filesystem
+# is according to usrmerge.
+
+usrmerge_prepare_rootfs () {
+    R=${IMAGE_ROOTFS}
+
+    for d in ${prefix} ${bindir} ${libdir} ${sbindir} ${datadir}; do
+        install -m 0755 -d ${R}$d
+    done
+
+    if [ -e ${R}/bin ]; then
+        rm -f ${R}/bin || rmdir ${R}/bin
+    fi
+    if [ -e ${R}/sbin ]; then
+        rm -f ${R}/sbin || rmdir ${R}/sbin
+    fi
+    if [ -e ${R}/${baselib} ]; then
+        rm -f ${R}/${baselib} || rmdir ${R}/${baselib}
+    fi
+    if [ "${baselib}" != "lib" -a -e ${R}/lib ]; then
+        rm -f ${R}/lib || rmdir ${R}/lib
+    fi
+
+    lnr ${R}${base_bindir} ${R}/bin
+    lnr ${R}${base_sbindir} ${R}/sbin
+    lnr ${R}${base_libdir} ${R}/${baselib}
+
+    if [ "${nonarch_base_libdir}" != "${base_libdir}" ]; then
+        lnr ${R}${nonarch_base_libdir} ${R}/lib
+    fi
+
+    # create base links for multilibs
+    multi_libdirs="${@d.getVar('MULTILIB_VARIANTS')}"
+    for d in $multi_libdirs; do
+        install -m 0755 -d ${R}/${exec_prefix}/$d
+        if [ -e ${R}/$d ]; then
+            rm -f ${R}/$d || rmdir ${R}/$d
+            lnr ${R}/${exec_prefix}/$d ${R}/$d
+        fi
+    done
+}
+
+ROOTFS_PREPROCESS_COMMAND_append = " \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'usrmerge', \
+                           'usrmerge_prepare_rootfs', '', d)} \
+"
